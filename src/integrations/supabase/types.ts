@@ -14,7 +14,227 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agents: {
+        Row: {
+          agent_name: string | null
+          business_description: string | null
+          business_name: string | null
+          business_type: string | null
+          created_at: string
+          emergency_number: string | null
+          faq: string | null
+          id: string
+          location: string | null
+          services: string | null
+          updated_at: string
+          user_id: string
+          voice_type: string | null
+          website: string | null
+          working_hours: string | null
+        }
+        Insert: {
+          agent_name?: string | null
+          business_description?: string | null
+          business_name?: string | null
+          business_type?: string | null
+          created_at?: string
+          emergency_number?: string | null
+          faq?: string | null
+          id?: string
+          location?: string | null
+          services?: string | null
+          updated_at?: string
+          user_id: string
+          voice_type?: string | null
+          website?: string | null
+          working_hours?: string | null
+        }
+        Update: {
+          agent_name?: string | null
+          business_description?: string | null
+          business_name?: string | null
+          business_type?: string | null
+          created_at?: string
+          emergency_number?: string | null
+          faq?: string | null
+          id?: string
+          location?: string | null
+          services?: string | null
+          updated_at?: string
+          user_id?: string
+          voice_type?: string | null
+          website?: string | null
+          working_hours?: string | null
+        }
+        Relationships: []
+      }
+      appointments: {
+        Row: {
+          appointment_date: string | null
+          appointment_time: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          id: string
+          service_address: string | null
+          service_type: string | null
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date?: string | null
+          appointment_time?: string | null
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          id?: string
+          service_address?: string | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string | null
+          appointment_time?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          id?: string
+          service_address?: string | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      extra_minutes: {
+        Row: {
+          created_at: string
+          id: string
+          minutes_added: number
+          purchase_price: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          minutes_added: number
+          purchase_price: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          minutes_added?: number
+          purchase_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          payment_status: string
+          plan: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payment_status?: string
+          plan: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payment_status?: string
+          plan?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          country: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      virtual_numbers: {
+        Row: {
+          area_code: string | null
+          assigned_at: string
+          country: string | null
+          id: string
+          order_id: string
+          telnyx_number: string | null
+          user_id: string
+        }
+        Insert: {
+          area_code?: string | null
+          assigned_at?: string
+          country?: string | null
+          id?: string
+          order_id: string
+          telnyx_number?: string | null
+          user_id: string
+        }
+        Update: {
+          area_code?: string | null
+          assigned_at?: string
+          country?: string | null
+          id?: string
+          order_id?: string
+          telnyx_number?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_numbers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +243,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      appointment_status: "confirmed" | "cancelled" | "rescheduled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +370,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      appointment_status: ["confirmed", "cancelled", "rescheduled"],
+    },
   },
 } as const

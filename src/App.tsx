@@ -14,6 +14,7 @@ import Onboarding from "./pages/Onboarding";
 import Appointments from "./pages/Appointments";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
+import PricingSelect from "./pages/PricingSelect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

@@ -1,10 +1,36 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [hasAgent, setHasAgent] = useState(false);
+  const [hasOrder, setHasOrder] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (!user) {
+        setCheckingOnboarding(false);
+        return;
+      }
+
+      const [agentRes, orderRes] = await Promise.all([
+        supabase.from("agents").select("id").eq("user_id", user.id).limit(1),
+        supabase.from("orders").select("id").eq("user_id", user.id).limit(1),
+      ]);
+
+      setHasAgent((agentRes.data?.length ?? 0) > 0);
+      setHasOrder((orderRes.data?.length ?? 0) > 0);
+      setCheckingOnboarding(false);
+    };
+
+    if (!loading) checkStatus();
+  }, [user, loading]);
+
+  if (loading || checkingOnboarding) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -13,6 +39,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) return <Navigate to="/login" replace />;
+
+  // If no agent yet and not on onboarding page, redirect to onboarding
+  if (!hasAgent && location.pathname !== "/onboarding") {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // If has agent but no order/plan and not on pricing page, redirect to pricing
+  if (hasAgent && !hasOrder && location.pathname !== "/pricing-select") {
+    return <Navigate to="/pricing-select" replace />;
+  }
 
   return <>{children}</>;
 };

@@ -14,6 +14,7 @@ import Onboarding from "./pages/Onboarding";
 import Appointments from "./pages/Appointments";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
+import PricingSelect from "./pages/PricingSelect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/pricing-select" element={<ProtectedRoute><PricingSelect /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

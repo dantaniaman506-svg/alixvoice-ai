@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const plans = [
@@ -18,7 +16,6 @@ const plans = [
 const PricingSelect = () => {
   const [selecting, setSelecting] = useState<string | null>(null);
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSelect = async (plan: typeof plans[0]) => {
@@ -26,28 +23,38 @@ const PricingSelect = () => {
     setSelecting(plan.name);
 
     try {
-      // Create order (payment_status = 'trial' for now since payment not connected yet)
-      const { error: orderError } = await supabase.from("orders").insert({
-        user_id: user.id,
-        plan: plan.name.toLowerCase().replace("-", "_").replace(" ", "_"),
-        payment_status: "active",
-      });
+      const planKey = plan.name === "7-Day Trial" ? "trial"
+        : plan.name === "Starter" ? "starter"
+        : plan.name === "Pro" ? "pro"
+        : "elite";
 
-      if (orderError) throw orderError;
+      const response = await fetch(
+        "https://alixvoice-backend-production.up.railway.app/payments/create-checkout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.id,
+            plan_name: planKey,
+            plan_price: plan.price.replace("$", ""),
+          }),
+        }
+      );
 
-      // Give temporary minutes based on plan
-      const { error: minutesError } = await supabase.from("extra_minutes").insert({
-        user_id: user.id,
-        minutes_added: plan.minutes,
-        purchase_price: 0,
-      });
+      const data = await response.json();
 
-      if (minutesError) throw minutesError;
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error("Checkout URL not received");
+      }
 
-      toast({ title: "Plan activated!", description: `You got ${plan.minutes} minutes. Welcome to AlixVoice!` });
-      navigate("/dashboard");
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      });
     } finally {
       setSelecting(null);
     }
@@ -111,7 +118,7 @@ const PricingSelect = () => {
                 disabled={selecting !== null}
                 onClick={() => handleSelect(plan)}
               >
-                {selecting === plan.name ? "Activating..." : plan.price === "$1" ? "Start Trial" : "Select Plan"}
+                {selecting === plan.name ? "Processing..." : plan.price === "$1" ? "Start Trial" : "Select Plan"}
               </Button>
             </motion.div>
           ))}

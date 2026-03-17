@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ const steps = ["Agent Setup", "Business Info", "Your Details"];
 const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [existingAgentId, setExistingAgentId] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,13 +41,54 @@ const Onboarding = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
+  // Existing agent check karo
+  useEffect(() => {
+    const loadExistingAgent = async () => {
+      if (!user) return;
+
+      const { data: agent } = await supabase
+        .from("agents")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (agent) {
+        setExistingAgentId(agent.id);
+        setAgentName(agent.agent_name || "");
+        setVoiceType(agent.voice_type || "female");
+        setBusinessName(agent.business_name || "");
+        setBusinessType(agent.business_type || "");
+        setWebsite(agent.website || "");
+        setLocation(agent.location || "");
+        setWorkingHours(agent.working_hours || "");
+        setServices(agent.services || "");
+        setEmergencyNumber(agent.emergency_number || "");
+        setBusinessDescription(agent.business_description || "");
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile) {
+        setFullName(profile.full_name || "");
+        setCountry(profile.country || "");
+        setPhone(profile.phone || "");
+        setEmail(profile.email || user.email || "");
+      }
+    };
+
+    loadExistingAgent();
+  }, [user]);
+
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
 
     try {
-      // Save agent
-      const { error: agentError } = await supabase.from("agents").insert({
+      const agentData = {
         user_id: user.id,
         agent_name: agentName,
         voice_type: voiceType,
@@ -58,25 +100,42 @@ const Onboarding = () => {
         services: services || null,
         emergency_number: emergencyNumber || null,
         business_description: businessDescription || null,
-      });
+      };
 
-      if (agentError) throw agentError;
+      if (existingAgentId) {
+        // Update existing agent
+        const { error } = await supabase
+          .from("agents")
+          .update(agentData)
+          .eq("id", existingAgentId);
+        if (error) throw error;
+      } else {
+        // Create new agent
+        const { error } = await supabase
+          .from("agents")
+          .insert(agentData);
+        if (error) throw error;
+      }
 
       // Update profile
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
           full_name: fullName,
           country: country || null,
           phone: phone || null,
           email: email || user.email,
-        })
-        .eq("user_id", user.id);
+        }, { onConflict: 'user_id' });
 
       if (profileError) throw profileError;
 
-      toast({ title: "Agent created!", description: "Now select your plan." });
+      toast({ 
+        title: existingAgentId ? "Agent updated!" : "Agent created!", 
+        description: "Now select your plan." 
+      });
       navigate("/pricing-select");
+
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -88,7 +147,6 @@ const Onboarding = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <Navbar />
       <div className="container mx-auto max-w-2xl px-4 py-12">
-        {/* Progress */}
         <div className="mb-10 flex items-center justify-center gap-2">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2">

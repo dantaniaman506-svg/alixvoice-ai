@@ -6,11 +6,8 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // Check karo user ne onboarding ki hai ya nahi
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
         const { data: agent } = await supabase
           .from('agents')
           .select('id')
@@ -18,18 +15,14 @@ const AuthCallback = () => {
           .single();
 
         if (agent) {
-          // Onboarding ho chuki hai
           navigate('/dashboard');
         } else {
-          // Pehli baar login — onboarding pe bhejo
           navigate('/onboarding');
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         navigate('/login');
       }
-    };
-
-    handleCallback();
+    });
   }, [navigate]);
 
   return (
@@ -41,3 +34,5 @@ const AuthCallback = () => {
     </div>
   );
 };
+
+export default AuthCallback;

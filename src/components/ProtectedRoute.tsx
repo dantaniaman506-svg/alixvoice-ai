@@ -8,7 +8,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [hasAgent, setHasAgent] = useState(false);
-  const [hasOrder, setHasOrder] = useState(false);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -17,13 +16,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const [agentRes, orderRes] = await Promise.all([
-        supabase.from("agents").select("id").eq("user_id", user.id).limit(1),
-        supabase.from("orders").select("id").eq("user_id", user.id).limit(1),
-      ]);
+      const agentRes = await supabase
+        .from("agents")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
 
       setHasAgent((agentRes.data?.length ?? 0) > 0);
-      setHasOrder((orderRes.data?.length ?? 0) > 0);
       setCheckingOnboarding(false);
     };
 
@@ -40,24 +39,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Agar payment ho gayi toh pricing-select pe mat bhejo
-  const params = new URLSearchParams(window.location.search);
-  const paymentDone = params.get('payment_status') === 'succeeded' || 
-                      params.get('status') === 'active' ||
-                      params.get('subscription_id');
-
-  if (paymentDone) {
-    return <>{children}</>;
-  }
-
-  // If no agent yet and not on onboarding page, redirect to onboarding
   if (!hasAgent && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;
-  }
-
-  // If has agent but no order/plan and not on pricing page, redirect to pricing
-  if (hasAgent && !hasOrder && location.pathname !== "/pricing-select") {
-    return <Navigate to="/pricing-select" replace />;
   }
 
   return <>{children}</>;

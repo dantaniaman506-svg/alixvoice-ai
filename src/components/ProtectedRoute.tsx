@@ -6,30 +6,30 @@ import { supabase } from "@/integrations/supabase/client";
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [checking, setChecking] = useState(true);
   const [hasAgent, setHasAgent] = useState(false);
 
   useEffect(() => {
     const checkStatus = async () => {
       if (!user) {
-        setCheckingOnboarding(false);
+        setChecking(false);
         return;
       }
 
-      const agentRes = await supabase
+      const { data } = await supabase
         .from("agents")
         .select("id")
         .eq("user_id", user.id)
         .limit(1);
 
-      setHasAgent((agentRes.data?.length ?? 0) > 0);
-      setCheckingOnboarding(false);
+      setHasAgent((data?.length ?? 0) > 0);
+      setChecking(false);
     };
 
     if (!loading) checkStatus();
   }, [user, loading]);
 
-  if (loading || checkingOnboarding) {
+  if (loading || checking) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

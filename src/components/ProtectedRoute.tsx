@@ -40,6 +40,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // Agar payment ho gayi toh pricing-select pe mat bhejo
+  const params = new URLSearchParams(window.location.search);
+  const paymentDone = params.get('payment_status') === 'succeeded' || 
+                      params.get('status') === 'active' ||
+                      params.get('subscription_id');
+
+  if (paymentDone) {
+    return <>{children}</>;
+  }
+
   // If no agent yet and not on onboarding page, redirect to onboarding
   if (!hasAgent && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;

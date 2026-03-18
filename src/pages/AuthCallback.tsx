@@ -8,17 +8,23 @@ const AuthCallback = () => {
   useEffect(() => {
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        
+        // Agent check karo
         const { data: agent } = await supabase
           .from('agents')
           .select('id')
           .eq('user_id', session.user.id)
           .single();
 
-        if (agent) {
-          navigate('/dashboard');
-        } else {
+        if (!agent) {
+          // Pehli baar — onboarding pe bhejo
           navigate('/onboarding');
+          return;
         }
+
+        // Agent hai — dashboard pe bhejo
+        navigate('/dashboard');
+
       } else if (event === 'SIGNED_OUT') {
         navigate('/login');
       }

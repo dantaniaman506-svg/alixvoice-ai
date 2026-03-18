@@ -32,11 +32,11 @@ const PricingSelect = () => {
       subscriptionId
     ) {
       toast({
-        title: "Payment Successful!",
+        title: "Payment Successful! 🎉",
         description: "Your plan is now active. Welcome to AlixVoice AI!",
       });
       setTimeout(() => {
-        navigate('/dashboard');
+        window.location.replace('/dashboard');
       }, 500);
     }
   }, []);

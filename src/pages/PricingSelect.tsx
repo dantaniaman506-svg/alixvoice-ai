@@ -20,20 +20,26 @@ const PricingSelect = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Payment success hone pe dashboard pe redirect karo
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get('payment_status');
-    const subscriptionId = urlParams.get('subscription_id');
-    
-    if (paymentStatus === 'succeeded' || subscriptionId) {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment_status');
+    const subscriptionId = params.get('subscription_id');
+    const status = params.get('status');
+
+    if (
+      paymentStatus === 'succeeded' ||
+      status === 'active' ||
+      subscriptionId
+    ) {
       toast({
         title: "Payment Successful!",
         description: "Your plan is now active. Welcome to AlixVoice AI!",
       });
-      navigate('/dashboard');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     }
-  }, [navigate]);
+  }, []);
 
   const handleSelect = async (plan: typeof plans[0]) => {
     if (!user) return;

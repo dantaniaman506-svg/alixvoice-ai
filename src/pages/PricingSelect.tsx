@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -17,6 +18,22 @@ const PricingSelect = () => {
   const [selecting, setSelecting] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Payment success hone pe dashboard pe redirect karo
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment_status');
+    const subscriptionId = urlParams.get('subscription_id');
+    
+    if (paymentStatus === 'succeeded' || subscriptionId) {
+      toast({
+        title: "Payment Successful!",
+        description: "Your plan is now active. Welcome to AlixVoice AI!",
+      });
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleSelect = async (plan: typeof plans[0]) => {
     if (!user) return;

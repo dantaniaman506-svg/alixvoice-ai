@@ -20,11 +20,8 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Step 0
   const [agentName, setAgentName] = useState("");
   const [voiceType, setVoiceType] = useState("female");
-
-  // Step 1
   const [businessName, setBusinessName] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [website, setWebsite] = useState("");
@@ -33,15 +30,12 @@ const Onboarding = () => {
   const [services, setServices] = useState("");
   const [emergencyNumber, setEmergencyNumber] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
-
-  // Step 2
   const [fullName, setFullName] = useState("");
   const [country, setCountry] = useState("");
   const [areaCode, setAreaCode] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
-  // Existing agent check karo
   useEffect(() => {
     const loadExistingAgent = async () => {
       if (!user) return;
@@ -64,19 +58,6 @@ const Onboarding = () => {
         setServices(agent.services || "");
         setEmergencyNumber(agent.emergency_number || "");
         setBusinessDescription(agent.business_description || "");
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profile) {
-        setFullName(profile.full_name || "");
-        setCountry(profile.country || "");
-        setPhone(profile.phone || "");
-        setEmail(profile.email || user.email || "");
       }
     };
 
@@ -103,36 +84,30 @@ const Onboarding = () => {
       };
 
       if (existingAgentId) {
-        // Update existing agent
         const { error } = await supabase
           .from("agents")
           .update(agentData)
           .eq("id", existingAgentId);
         if (error) throw error;
       } else {
-        // Create new agent
         const { error } = await supabase
           .from("agents")
           .insert(agentData);
         if (error) throw error;
       }
 
-      // Update profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          user_id: user.id,
-          full_name: fullName,
-          country: country || null,
-          phone: phone || null,
-          email: email || user.email,
-        }, { onConflict: 'user_id' });
+      // Users table mein area code save karo
+      await supabase
+        .from("users")
+        .update({
+          area_code: areaCode || '212',
+          country: country || 'US',
+        })
+        .eq("id", user.id);
 
-      if (profileError) throw profileError;
-
-      toast({ 
-        title: existingAgentId ? "Agent updated!" : "Agent created!", 
-        description: "Now select your plan." 
+      toast({
+        title: existingAgentId ? "Agent updated!" : "Agent created!",
+        description: "Now select your plan."
       });
       navigate("/pricing-select");
 

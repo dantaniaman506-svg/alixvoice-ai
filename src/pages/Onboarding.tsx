@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const steps = ["Agent Setup", "Business Info", "Your Details"];
 
+const FEMALE_VOICE_ID = "ecp3DWciuUyW7BYM7II1";
+const MALE_VOICE_ID = "nzFihrBIvB34imQBuxub";
+
 const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -59,6 +62,17 @@ const Onboarding = () => {
         setEmergencyNumber(agent.emergency_number || "");
         setBusinessDescription(agent.business_description || "");
       }
+
+      const { data: userData } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (userData) {
+        setCountry(userData.country || "");
+        setAreaCode(userData.area_code || "");
+      }
     };
 
     loadExistingAgent();
@@ -69,10 +83,14 @@ const Onboarding = () => {
     setSaving(true);
 
     try {
+      // Voice ID set karo
+      const voiceId = voiceType === "female" ? FEMALE_VOICE_ID : MALE_VOICE_ID;
+
       const agentData = {
         user_id: user.id,
         agent_name: agentName,
         voice_type: voiceType,
+        vapi_agent_id: voiceId,
         business_name: businessName,
         business_type: businessType,
         website: website || null,
@@ -96,14 +114,16 @@ const Onboarding = () => {
         if (error) throw error;
       }
 
-      // Users table mein area code save karo
-      await supabase
+      // Users table mein save karo
+      const { error: userError } = await supabase
         .from("users")
         .update({
           area_code: areaCode || '212',
           country: country || 'US',
         })
         .eq("id", user.id);
+
+      if (userError) throw userError;
 
       toast({
         title: existingAgentId ? "Agent updated!" : "Agent created!",

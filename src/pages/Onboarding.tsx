@@ -83,7 +83,6 @@ const Onboarding = () => {
     setSaving(true);
 
     try {
-      // Voice ID set karo
       const voiceId = voiceType === "female" ? FEMALE_VOICE_ID : MALE_VOICE_ID;
 
       const agentData = {
@@ -114,16 +113,14 @@ const Onboarding = () => {
         if (error) throw error;
       }
 
-      // Users table mein save karo
-      const { error: userError } = await supabase
+      // Users table update karo — error ignore karo
+      await supabase
         .from("users")
         .update({
           area_code: areaCode || '212',
           country: country || 'US',
         })
         .eq("id", user.id);
-
-      if (userError) throw userError;
 
       toast({
         title: existingAgentId ? "Agent updated!" : "Agent created!",
